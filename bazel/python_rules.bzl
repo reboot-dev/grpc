@@ -47,6 +47,8 @@ def _merge_pyinfos(pyinfos):
     )
 
 def _gen_py_aspect_impl(target, context):
+    print("pyi tool")
+    print(context.attr.pyi_tool)
     # Early return for well-known protos.
     if is_well_known(str(context.label)):
         return [
@@ -120,6 +122,12 @@ _gen_py_aspect = aspect(
             default = Label("@com_google_protobuf//:protobuf_python"),
             providers = [PyInfo],
         ),
+        "pyi_tool": attr.label(
+          providers = ["files_to_run"],
+          executable = True,
+          cfg = "exec",
+          default = None,
+        ),
     },
 )
 
@@ -177,6 +185,12 @@ py_proto_library = rule(
             providers = [PyInfo],
         ),
         "imports": attr.string_list(),
+        "pyi_tool": attr.label(
+          providers = ["files_to_run"],
+          executable = True,
+          cfg = "exec",
+          default = None,
+        )
     },
     implementation = _generate_py_impl,
 )
@@ -195,7 +209,7 @@ def _generate_pb2_grpc_src_impl(context):
         # is virtual imports
         out_path = out_dir.path
     else:
-        out_path = context.genfiles_dir.path
+        out_path = out_dir.path
     arguments += get_plugin_args(
         context.executable._grpc_plugin,
         plugin_flags,
